@@ -12,16 +12,16 @@ import { protect } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
-// ✅ Setup multer to handle temporary uploads
-const upload = multer({ dest: "uploads/" });
+// ✅ Memory-based storage (no /uploads folder)
+const upload = multer({ storage: multer.memoryStorage() });
 
-// ✅ Protected routes
-router.post("/", protect, upload.single("image"), createProduct); // ✅ <--- important
+// ✅ Protected Routes
+router.post("/", protect, upload.single("image"), createProduct);
 router.get("/my-products", protect, getMyProducts);
 router.delete("/delete-all", protect, deleteAllMyProducts);
 router.delete("/:id", protect, deleteProduct);
 
-// ✅ Public routes
+// ✅ Public Routes
 router.get("/", getProducts);
 router.get("/:slug", getProductBySlug);
 
