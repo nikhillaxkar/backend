@@ -7,6 +7,9 @@ import productRoutes from "./routes/productRoutes.js";
 dotenv.config();
 
 const app = express();
+// ✅ Define the PORT (This was missing before!)
+const PORT = process.env.PORT || 5000;
+
 app.use(cors());
 app.use(express.json());
 
@@ -21,9 +24,16 @@ app.use("/api/products", productRoutes);
 
 // ✅ Default route
 app.get("/", (req, res) => {
-  res.send("Backend is live on Vercel 🚀");
+  res.send("Backend is live! 🚀");
 });
 
-// ❌ Remove app.listen()
-// ✅ Export the app for Vercel
+// ✅ Start Server (Local Development)
+// We use a check here so it doesn't conflict when deploying to Vercel later
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => {
+      console.log(`✅ Server is running on port ${PORT}`);
+    });
+}
+
+// ✅ Export for Vercel
 export default app;
