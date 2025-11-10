@@ -1,39 +1,35 @@
 import express from "express";
-import mongoose from "mongoose";
-import cors from "cors";
 import dotenv from "dotenv";
+import helmet from "helmet";
+import cors from "cors";
+import mongoose from "mongoose";
+
 import productRoutes from "./routes/productRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
 
 dotenv.config();
-
 const app = express();
-// ✅ Define the PORT (This was missing before!)
-const PORT = process.env.PORT || 5000;
 
-app.use(cors());
+// Middlewares
 app.use(express.json());
+app.use(cors());
+app.use(helmet());
 
-// ✅ MongoDB connection
+// MongoDB connect
 mongoose
-  .connect(process.env.MONGO_URI, { dbName: "testdb" })
-  .then(() => console.log("✅ MongoDB connected"))
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("✅ MongoDB Connected"))
   .catch((err) => console.log("❌ MongoDB Error:", err.message));
 
-// ✅ Routes
+// Routes
+app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 
-// ✅ Default route
+// Root route
 app.get("/", (req, res) => {
-  res.send("Backend is live! 🚀");
+  res.send("🚀 Backend is running securely!");
 });
 
-// ✅ Start Server (Local Development)
-// We use a check here so it doesn't conflict when deploying to Vercel later
-if (process.env.NODE_ENV !== 'production') {
-    app.listen(PORT, () => {
-      console.log(`✅ Server is running on port ${PORT}`);
-    });
-}
-
-// ✅ Export for Vercel
-export default app;
+// Start server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
