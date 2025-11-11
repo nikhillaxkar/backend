@@ -162,3 +162,70 @@ export const deleteAllMyProducts = async (req, res) => {
       .json({ message: "Internal server error", error: error.message });
   }
 };
+
+
+
+
+/**
+ * ✅ Update product (only if the logged-in user owns it)
+ */
+export const updateProduct = async (req, res) => {
+  try {
+    const { name, price, category, description, imageUrl } = req.body;
+
+    // 1️⃣ Find product
+    const product = await Product.findById(req.params.id);
+    if (!product)
+      return res.status(404).json({ message: "Product not found" });
+
+    // 2️⃣ Check ownership
+    if (product.creator.toString() !== req.user.id) {
+      return res.status(403).json({
+        message: "Not authorized to update this product",
+      });
+    }
+
+    // 3️⃣ Handle image updates
+    let finalImageUrl = product.imageUrl; // default old image
+
+    if (req.file) {
+      // user uploaded new file
+      const fileBuffer = req.file.buffer;
+      const base64 = Buffer.from(fileBuffer).toString("base64");
+      const dataUri = `data:${req.file.mimetype};base64,${base64}`;
+
+      const uploadResult = await cloudinary.uploader.upload(dataUri, {
+        folder: "products",
+      });
+
+      finalImageUrl = uploadResult.secure_url;
+    } else if (imageUrl) {
+      // user provided image URL
+      const uploadResult = await cloudinary.uploader.upload(imageUrl, {
+        folder: "products",
+      });
+      finalImageUrl = uploadResult.secure_url;
+    }
+
+    // 4️⃣ Update fields
+    product.name = name || product.name;
+    product.price = price || product.price;
+    product.category = category || product.category;
+    product.description = description || product.description;
+    product.imageUrl = finalImageUrl;
+
+    await product.save();
+
+    res.status(200).json({
+      success: true,
+      message: "✅ Product updated successfully",
+      product,
+    });
+  } catch (error) {
+    console.error("❌ Error updating product:", error);
+    res.status(500).json({
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
